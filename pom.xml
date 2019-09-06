@@ -32,6 +32,12 @@
             <version>2.4.0</version>
 
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.microsoft.ml.spark/mmlspark -->
+        <dependency>
+            <groupId>com.microsoft.ml.spark</groupId>
+            <artifactId>mmlspark_2.11</artifactId>
+            <version>0.18.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.scala-lang</groupId>
