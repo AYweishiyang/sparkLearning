@@ -1,7 +1,7 @@
 package com.ay
 
 /**
- * version 1.0
+ * version 2.0
  */
 
 import org.apache.spark.{SparkConf, SparkContext}
