@@ -20,7 +20,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.ay.HelloWorld</mainClass>
+                            <mainClass>com.ay.MyMML</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
