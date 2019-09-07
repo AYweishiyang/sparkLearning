@@ -12,8 +12,8 @@ import org.apache.spark.sql.SparkSession
 object MyMML {
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
-    //    val conf = new SparkConf().setAppName("HelloWorld")
+//    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
+    val conf = new SparkConf().setAppName("HelloWorld")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val df = spark
       .read
@@ -21,8 +21,9 @@ object MyMML {
       .option("header","true")
       .option("multiLine", true)
       .option("inferSchema", true)
-      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
-    //      .load("/full_features.csv")
+      .load("/full_features.csv")
+//      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
+
     val assembler = new VectorAssembler()
       .setInputCols(Array("temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour","minute", "windgust", "t_m24", "t_m48"))
       .setOutputCol("features")
