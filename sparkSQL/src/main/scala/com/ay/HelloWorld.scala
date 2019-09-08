@@ -26,8 +26,8 @@ object HelloWorld {
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
-//    val conf = new SparkConf().setAppName("HelloWorld")
+//    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
+    val conf = new SparkConf().setAppName("HelloWorld")
     val spark = SparkSession.builder().config(conf).getOrCreate()
     val df = spark
       .read
@@ -35,8 +35,8 @@ object HelloWorld {
       .option("header","true")
       .option("multiLine", true)
       .option("inferSchema", true)
-      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
-    //      .load("/full_features.csv")
+//      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
+      .load("/full_features.csv")
     val assembler = new VectorAssembler()
       .setInputCols(Array("temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour","minute", "windgust", "t_m24", "t_m48"))
       .setOutputCol("features")
@@ -72,7 +72,7 @@ object HelloWorld {
 
       val paramGrid = new ParamGridBuilder()
         .addGrid(gbt.maxDepth, Array(8,9))
-        .addGrid(gbt.maxIter, Array(300,500))
+        .addGrid(gbt.maxIter, Array(300))
         .build()
 
     val evaluator = new RegressionEvaluator()
@@ -90,7 +90,7 @@ object HelloWorld {
       .setEvaluator(evaluator1)
       .setEstimatorParamMaps(paramGrid)
       .setNumFolds(3)  // Use 3+ in practice
-      .setParallelism(3)  // Evaluate up to 2 parameter settings in parallel
+      .setParallelism(10)  // Evaluate up to 2 parameter settings in parallel
       val cvModel = cv.fit(trainingData)
 //
 //      val model = pipeline.fit(trainingData)
@@ -113,7 +113,7 @@ object HelloWorld {
     printf("map = %f",mae)
 //    val gbtModel = model.stages(1).asInstanceOf[GBTRegressionModel]
 //    println(s"Learned regression GBT model:\n ${gbtModel.toDebugString}")
-    Thread.sleep(1000000)
-    spark.close()
+//    Thread.sleep(1000000)
+//    spark.close()
   }
 }

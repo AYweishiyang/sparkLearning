@@ -12,7 +12,7 @@
     <artifactId>sparkSQL</artifactId>
     <build>
         <!--打成jar包的名字-->
-        <!--<finalName>wordcount</finalName>-->
+        <finalName>MyMML</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -8,24 +8,25 @@ import org.apache.spark.ml.feature.{VectorAssembler, VectorIndexer}
 import org.apache.spark.ml.regression.GBTRegressor
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 import org.apache.spark.sql.SparkSession
+import java.util.Date
 
 object MyMML {
   def main(args: Array[String]): Unit = {
-
-//    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
-    val conf = new SparkConf().setAppName("HelloWorld")
-    val spark = SparkSession.builder().config(conf).getOrCreate()
+    val start_time = new Date().getTime
+    //    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
+    val conf = new SparkConf().setAppName("MML")
+    val spark = SparkSession.builder().config(conf).config("spark.executor.cores",24).getOrCreate()
     val df = spark
       .read
       .format("csv")
-      .option("header","true")
+      .option("header", "true")
       .option("multiLine", true)
       .option("inferSchema", true)
       .load("/full_features.csv")
-//      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
+    //      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
 
     val assembler = new VectorAssembler()
-      .setInputCols(Array("temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour","minute", "windgust", "t_m24", "t_m48"))
+      .setInputCols(Array("temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour", "minute", "windgust", "t_m24", "t_m48"))
       .setOutputCol("features")
 
     val output = assembler.transform(df)
@@ -43,28 +44,24 @@ object MyMML {
     val Array(trainingData, testData) = output.randomSplit(Array(0.7, 0.3))
 
 
-
-
-
-
     // Train a GBT model.
     val lgbm = new LightGBMRegressor()
       .setLabelCol("load")
       .setFeaturesCol("indexedFeatures")
 
 
-//    val gbt = new GBTRegressor()
-//      .setLabelCol("load")
-//      .setFeaturesCol("indexedFeatures")
-//      .setMaxIter(200)
+    //    val gbt = new GBTRegressor()
+    //      .setLabelCol("load")
+    //      .setFeaturesCol("indexedFeatures")
+    //      .setMaxIter(200)
 
     // Chain indexer and GBT in a Pipeline.
     val pipeline = new Pipeline()
       .setStages(Array(featureIndexer, lgbm))
 
     val paramGrid = new ParamGridBuilder()
-      .addGrid(lgbm.maxDepth, Array(3,5))
-      .addGrid(lgbm.numLeaves, Array(20,31))
+      .addGrid(lgbm.maxDepth, Array(3, 4,5))
+      .addGrid(lgbm.numLeaves, Array(16,20, 31,40,60))
       .build()
 
     val evaluator = new RegressionEvaluator()
@@ -81,9 +78,12 @@ object MyMML {
       .setEvaluator(evaluator)
       .setEvaluator(evaluator1)
       .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(3)  // Use 3+ in practice
-      .setParallelism(3)  // Evaluate up to 2 parameter settings in parallel
+      .setNumFolds(5) // Use 3+ in practice
+      .setParallelism(10) // Evaluate up to 2 parameter settings in parallel
+    val start_train_time = new Date().getTime
+
     val cvModel = cv.fit(trainingData)
+    val end_train_time = new Date().getTime
     //
     println("best--params" + cvModel.bestModel.params)
     //      val model = pipeline.fit(trainingData)
@@ -103,11 +103,14 @@ object MyMML {
     val rmse = evaluator.evaluate(predictions)
     val mae = evaluator1.evaluate(predictions)
     println(s"Root Mean Squared Error (RMSE) on test data = $rmse")
-    printf("map = %f",mae)
+    printf("map = %f\n", mae)
     //    val gbtModel = model.stages(1).asInstanceOf[GBTRegressionModel]
     //    println(s"Learned regression GBT model:\n ${gbtModel.toDebugString}")
-//    Thread.sleep(1000000)
-
+    //    Thread.sleep(1000000)
+    val end_time = new Date().getTime
+    println("totle time : " + (end_time - start_time)) //单位毫秒 }}
+    println("train_time : " + (end_train_time - start_train_time)) //单位毫秒 }}
+    println(cvModel.bestModel.params.toString)
   }
 
 }
