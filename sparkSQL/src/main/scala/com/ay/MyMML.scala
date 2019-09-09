@@ -22,11 +22,11 @@ object MyMML {
       .option("header", "true")
       .option("multiLine", true)
       .option("inferSchema", true)
-      .load("/full_features.csv")
+      .load("/full_features_no.csv")
     //      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
 
     val assembler = new VectorAssembler()
-      .setInputCols(Array("temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour", "minute", "windgust", "t_m24", "t_m48"))
+      .setInputCols(Array("temp", "dew", "humi", "dow", "doy", "month", "hour", "minute", "t_m24", "t_m48","value_shift","condition"))
       .setOutputCol("features")
 
     val output = assembler.transform(df)
@@ -34,11 +34,11 @@ object MyMML {
     //    val df1 = spark.sql("select load from test")
     //    df1.show()
 
-    val featureIndexer = new VectorIndexer()
-      .setInputCol("features")
-      .setOutputCol("indexedFeatures")
-      .setMaxCategories(4)
-      .fit(output)
+//    val featureIndexer = new VectorIndexer()
+//      .setInputCol("features")
+//      .setOutputCol("indexedFeatures")
+//      .setMaxCategories(4)
+//      .fit(output)
 
     // Split the data into training and test sets (30% held out for testing).
     val Array(trainingData, testData) = output.randomSplit(Array(0.7, 0.3))
@@ -57,7 +57,7 @@ object MyMML {
 
     // Chain indexer and GBT in a Pipeline.
     val pipeline = new Pipeline()
-      .setStages(Array(featureIndexer, lgbm))
+      .setStages(Array(lgbm))
 
     val paramGrid = new ParamGridBuilder()
       .addGrid(lgbm.maxDepth, Array(3, 4,5))
