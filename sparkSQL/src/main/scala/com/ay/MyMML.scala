@@ -25,11 +25,11 @@ object MyMML {
       .load("/full_features_no.csv")
     //      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
 
-    val assembler = new VectorAssembler()
-      .setInputCols(Array("temp", "dew", "humi", "dow", "doy", "month", "hour", "minute", "t_m24", "t_m48","value_shift","condition"))
-      .setOutputCol("features")
-
-    val output = assembler.transform(df)
+//    val assembler = new VectorAssembler()
+//      .setInputCols(Array("temp", "dew", "humi", "dow", "doy", "month", "hour", "minute", "t_m24", "t_m48","value_shift","condition"))
+//      .setOutputCol("features")
+//
+//    val output = assembler.transform(df)
     //    val df1 = spark.sql("select * from test where timestamp > '2019-07-31 00:00:00'").show()
     //    val df1 = spark.sql("select load from test")
     //    df1.show()
@@ -41,13 +41,14 @@ object MyMML {
 //      .fit(output)
 
     // Split the data into training and test sets (30% held out for testing).
-    val Array(trainingData, testData) = output.randomSplit(Array(0.7, 0.3))
+    val Array(trainingData, testData) = df.randomSplit(Array(0.7, 0.3))
 
 
     // Train a GBT model.
     val lgbm = new LightGBMRegressor()
       .setLabelCol("load")
-      .setFeaturesCol("indexedFeatures")
+      .setFeaturesCol("temp")
+      .setFeaturesCol("humi")
 
 
     //    val gbt = new GBTRegressor()

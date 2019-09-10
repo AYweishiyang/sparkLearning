@@ -12,7 +12,7 @@
     <artifactId>sparkSQL</artifactId>
     <build>
         <!--打成jar包的名字-->
-        <finalName>MyMML</finalName>
+        <finalName>Hello</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -20,7 +20,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.ay.MyMML</mainClass>
+                            <mainClass>com.ay.HelloWorld</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
