@@ -13,17 +13,17 @@ import java.util.Date
 object MyMML {
   def main(args: Array[String]): Unit = {
     val start_time = new Date().getTime
-    //    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
+//    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
     val conf = new SparkConf().setAppName("MML")
-    val spark = SparkSession.builder().config(conf).config("spark.executor.cores",24).getOrCreate()
+    val spark = SparkSession.builder().config(conf).getOrCreate()//config("spark.executor.cores",4)
     val df = spark
       .read
       .format("csv")
       .option("header", "true")
       .option("multiLine", true)
       .option("inferSchema", true)
-      .load("/full_features.csv")
-    //      .load("file:///D:\\jupyter\\my_kaggle-master\\origin\\lecture05\\energy_forecasting_notebooks\\energy_forecasting_notebooks\\full_features.csv")
+      .load("/full_features_shift.csv")
+//      .load("file:///H:\\jupyter\\energy_forecasting_notebooks\\full_features_shift.csv")
 
     val assembler = new VectorAssembler()
       .setInputCols(Array("temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour", "minute", "windgust", "t_m24", "t_m48"))
