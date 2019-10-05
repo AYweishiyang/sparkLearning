@@ -13,9 +13,9 @@ import java.util.Date
 object MyMML {
   def main(args: Array[String]): Unit = {
     val start_time = new Date().getTime
-//    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
-    val conf = new SparkConf().setAppName("MML")
-    val spark = SparkSession.builder().config(conf).getOrCreate()//config("spark.executor.cores",4)
+    //    val conf = new SparkConf().setAppName("HelloWorld").setMaster("local[*]")
+    //    val conf = new SparkConf().setAppName("MML")
+    val spark = SparkSession.builder().appName("MML").getOrCreate()
     val df = spark
       .read
       .format("csv")
@@ -23,7 +23,7 @@ object MyMML {
       .option("multiLine", true)
       .option("inferSchema", true)
       .load("/full_features_shift.csv")
-//      .load("file:///H:\\jupyter\\energy_forecasting_notebooks\\full_features_shift.csv")
+    //      .load("file:///H:\\jupyter\\energy_forecasting_notebooks\\full_features_shift.csv")
 
     val assembler = new VectorAssembler()
       .setInputCols(Array("temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour", "minute", "windgust", "t_m24", "t_m48"))
@@ -60,8 +60,8 @@ object MyMML {
       .setStages(Array(featureIndexer, lgbm))
 
     val paramGrid = new ParamGridBuilder()
-      .addGrid(lgbm.maxDepth, Array(3, 4,5))
-      .addGrid(lgbm.numLeaves, Array(16,20, 31,40,60))
+      .addGrid(lgbm.maxDepth, Array(3, 4, 5))
+      .addGrid(lgbm.numLeaves, Array(16, 20, 31, 40, 60))
       .build()
 
     val evaluator = new RegressionEvaluator()
@@ -69,6 +69,10 @@ object MyMML {
       .setPredictionCol("prediction")
       .setMetricName("rmse")
     val evaluator1 = new RegressionEvaluator()
+      .setLabelCol("load")
+      .setPredictionCol("prediction")
+      .setMetricName("mae")
+    val evaluator2 = new RegressionEvaluator()
       .setLabelCol("load")
       .setPredictionCol("prediction")
       .setMetricName("mae")
@@ -110,7 +114,10 @@ object MyMML {
     val end_time = new Date().getTime
     println("totle time : " + (end_time - start_time)) //单位毫秒 }}
     println("train_time : " + (end_train_time - start_train_time)) //单位毫秒 }}
-    println(cvModel.bestModel.params.toString)
+    for(a<-cvModel.bestModel.params){
+      println(a)
+    }
+
   }
 
 }
