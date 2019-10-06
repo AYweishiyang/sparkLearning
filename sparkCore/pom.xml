@@ -17,6 +17,7 @@
 
     <build>
         <!--声明并引入插件-->
+        <finalName>JavaMML</finalName>
         <plugins>
             <!--设置项目的编译版本-->
             <plugin>
@@ -25,7 +26,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.ay.WordCount</mainClass>
+                            <mainClass>com.ay.mml</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -33,20 +34,7 @@
                     </descriptorRefs>
                 </configuration>
             </plugin>
-            <!--用于编译Scala代码到class-->
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>3.2.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -10,5 +10,8 @@
         <module name="sparkCore" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="sparkLearning" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>
