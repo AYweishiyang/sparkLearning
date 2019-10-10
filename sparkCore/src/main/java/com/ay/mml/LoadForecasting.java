@@ -32,7 +32,7 @@ public class LoadForecasting {
         SparkSession spark = SparkSession
                 .builder()
                 .appName("javaMML")
-                .config("spark.master","local[*]")
+//                .config("spark.master","local[*]")
 //                .config("spark.eventLog.enabled", "false")
                 .getOrCreate();
         Dataset<Row> df = spark
@@ -41,8 +41,8 @@ public class LoadForecasting {
                 .option("header", "true")
                 .option("multiLine", true)
                 .option("inferSchema", true)
-//                .load("/full_features_shift.csv");
-                .load("file:///H:\\jupyter\\energy_forecasting_notebooks\\full_features_shift.csv");
+                .load("/full_features_shift.csv");
+//                .load("file:///H:\\jupyter\\energy_forecasting_notebooks\\full_features_shift.csv");
 
         // $example on$
         // Load and parse the data file, converting it to a DataFrame.
@@ -69,8 +69,8 @@ public class LoadForecasting {
 
 
         ParamMap[] paramGridBuilder = new ParamGridBuilder()
-//                .addGrid(lightGBMRegressor.maxDepth(), new int[]{3, 4, 5,6,7,8})
-//                .addGrid(lightGBMRegressor.numLeaves(), new int[]{16, 20, 31, 40, 60})
+                .addGrid(lightGBMRegressor.maxDepth(), new int[]{3, 4, 5,6,7,8})
+                .addGrid(lightGBMRegressor.numLeaves(), new int[]{16, 20, 31, 40, 60})
                 .addGrid(lightGBMRegressor.learningRate(),new double[]{0.05,0.1})
                 .build();
 
@@ -102,7 +102,7 @@ public class LoadForecasting {
                 .setEvaluator(regressionEvaluator4)
                 .setEstimatorParamMaps(paramGridBuilder)
                 .setNumFolds(5) // Use 3+ in practice
-                .setParallelism(5);// Evaluate up to 2 parameter settings in parallel
+                .setParallelism(10);// Evaluate up to 2 parameter settings in parallel
         long start = System.currentTimeMillis();
         CrossValidatorModel crossValidatorModel = crossValidator.fit(trainingData);
         long end = System.currentTimeMillis();
