@@ -1,22 +1,14 @@
 package com.ay.mml;
 
-/**
- * @author ay
- * @create 2019-10-05 11:29
- */
-
-// $example on$
 import com.microsoft.ml.spark.lightgbm.LightGBMRegressor;
-import org.apache.spark.ml.*;
+import org.apache.spark.ml.Pipeline;
+import org.apache.spark.ml.PipelineModel;
+import org.apache.spark.ml.PipelineStage;
+import org.apache.spark.ml.Transformer;
 import org.apache.spark.ml.evaluation.RegressionEvaluator;
 import org.apache.spark.ml.feature.VectorAssembler;
-import org.apache.spark.ml.feature.VectorIndexer;
-import org.apache.spark.ml.feature.VectorIndexerModel;
-import org.apache.spark.ml.param.Param;
 import org.apache.spark.ml.param.ParamMap;
-import org.apache.spark.ml.param.ParamPair;
-import org.apache.spark.ml.regression.GBTRegressionModel;
-import org.apache.spark.ml.regression.GBTRegressor;
+import org.apache.spark.ml.regression.RandomForestRegressor;
 import org.apache.spark.ml.tuning.CrossValidator;
 import org.apache.spark.ml.tuning.CrossValidatorModel;
 import org.apache.spark.ml.tuning.ParamGridBuilder;
@@ -24,20 +16,21 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-import java.util.List;
-// $example off$
-
-public class LoadForecasting {
+/**
+ * @author ay
+ * @create 2020-06-08 8:39
+ */
+public class RandomForest {
     public static void main(String[] args) {
         SparkSession spark = SparkSession
                 .builder()
-                .appName("javaMML")
-                .config("spark.executor.cores",4)
-                .config("spark.executor.instances", 3)
-                .config("spark.executor.memory", "3g")
-                .config("spark.default.parallelism", 100)
-//                .config("spark.master","local[*]")
-//                .config("spark.eventLog.enabled", "false")
+                .appName("RF")
+//                .config("spark.executor.cores",4)
+//                .config("spark.executor.instances", 3)
+//                .config("spark.executor.memory", "3g")
+//                .config("spark.default.parallelism", 100)
+                .config("spark.master","local[*]")
+                .config("spark.eventLog.enabled", "false")
                 .getOrCreate();
         Dataset<Row> df = spark
                 .read()
@@ -45,15 +38,12 @@ public class LoadForecasting {
                 .option("header", "true")
                 .option("multiLine", true)
                 .option("inferSchema", true)
-                .load("/full_features_shift.csv");
-//                .load("file:///H:\\jupyter\\energy_forecasting_notebooks\\full_features_shift.csv");
+//                .load("/full_features_shift.csv");
+                .load("file:///D:\\mi\\jupyter\\energy_forecasting_notebooks\\final-data.csv");
 
-        // $example on$
-        // Load and parse the data file, converting it to a DataFrame.
-//        Dataset<Row> data = spark.read().format("libsvm").load("data/mllib/sample_libsvm_data.txt");
 
-//        df.show(10);
         VectorAssembler vectorAssembler = new VectorAssembler()
+//                .setInputCols(new String[]{"temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour", "minute", "windgust", "t_m24", "t_m48"})
                 .setInputCols(new String[]{"temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour", "minute", "windgust", "t_m24", "t_m48"})
 //                .setInputCols(new String[]{"temp", "t_m48"})
                 .setOutputCol("features");
@@ -64,18 +54,19 @@ public class LoadForecasting {
         Dataset<Row> trainingData = splits[0];
         Dataset<Row> testData = splits[1];
 
-        LightGBMRegressor lightGBMRegressor = new LightGBMRegressor()
+//        LightGBMRegressor lightGBMRegressor = new LightGBMRegressor()
+//                .setLabelCol("load")
+//                .setFeaturesCol("features");
+        RandomForestRegressor rf = new RandomForestRegressor()
                 .setLabelCol("load")
                 .setFeaturesCol("features");
 
         Pipeline pipeline = new Pipeline()
-                .setStages(new PipelineStage[]{lightGBMRegressor});
+                .setStages(new PipelineStage[]{rf});
 
 
         ParamMap[] paramGridBuilder = new ParamGridBuilder()
-                .addGrid(lightGBMRegressor.maxDepth(), new int[]{3,4, 5,6,7,8})
-                .addGrid(lightGBMRegressor.numLeaves(), new int[]{16, 20, 31, 40, 60})
-                .addGrid(lightGBMRegressor.learningRate(),new double[]{0.05,0.1})
+                .addGrid(rf.numTrees(), new int[]{10,20})
                 .build();
 
 
@@ -115,8 +106,6 @@ public class LoadForecasting {
 
         prediction.select("prediction", "load", "features").show(5);
 
-//        ParamMap paramMap = crossValidatorModel.paramMap();
-
 
         double rmse = regressionEvaluator1.evaluate(prediction);
         double mse = regressionEvaluator2.evaluate(prediction);
@@ -134,41 +123,6 @@ public class LoadForecasting {
         System.out.println("bestModel.stages().length=====" + bestModel.stages()[0].extractParamMap().toString());
 
 
-
-//        ParamMap paramMap = bestModel.paramMap();
-//        System.out.println("paramMap.toString()========" + paramMap.toString());
-//
-//        Model<?> bestModel1 = crossValidatorModel.bestModel();
-//        ParamMap[] estimatorParamMaps = crossValidatorModel.getEstimatorParamMaps();
-//        double[] metrics = crossValidatorModel.avgMetrics();
-//        for (ParamMap estimatorParamMap:estimatorParamMaps) {
-//            System.out.println("estimatorParamMap.toString()========" + estimatorParamMap.toString());
-//        }
-//        for (double metric: metrics) {
-//            System.out.println("metrics===" + metric);
-//        }
-
-
-//        List<ParamPair<?>> paramPairs = paramMap.toList();
-//        for (ParamPair paramPair:paramPairs) {
-//            System.out.println("paramPair.toString()========" + paramPair.toString());
-//            Param param = paramPair.param();
-//            System.out.println("param.toString()========" + param.toString());
-//        }
-//        System.out.println("paramMap.toString()======" + paramMap.toString());
-//        ParamMap paramMap = pipeline.paramMap();
-//        List<ParamPair<?>> paramPairs = paramMap.toList();
-//        for (ParamPair paramPair:paramPairs) {
-//            System.out.println("paramPair.toString()========" + paramPair.toString());
-//        }
-
-//        ParamMap paramMap1 = lightGBMRegressor.paramMap();
-//        List<ParamPair<?>> paramPairs1 = paramMap1.toList();
-//        for (ParamPair paramPair:paramPairs1) {
-//            System.out.println("paramPair.toString()========" + paramPair.toString());
-//            Param param = paramPair.param();
-//            System.out.println("param.toString()========" + param.toString());
-//        }
 
         System.out.println("train-time= " + (end-start)/1000.0 + " s");
         spark.stop();
