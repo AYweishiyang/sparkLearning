@@ -52,6 +52,12 @@
             <version>2.11.12</version>
 <!--            <scope>provided</scope>-->
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.scalanlp/breeze -->
+        <dependency>
+            <groupId>org.scalanlp</groupId>
+            <artifactId>breeze_2.11</artifactId>
+            <version>1.0</version>
+        </dependency>
 
 
     </dependencies>

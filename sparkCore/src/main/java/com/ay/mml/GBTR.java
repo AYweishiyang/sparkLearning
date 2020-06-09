@@ -1,6 +1,5 @@
 package com.ay.mml;
 
-import com.microsoft.ml.spark.lightgbm.LightGBMRegressor;
 import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
@@ -8,6 +7,7 @@ import org.apache.spark.ml.Transformer;
 import org.apache.spark.ml.evaluation.RegressionEvaluator;
 import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.ml.param.ParamMap;
+import org.apache.spark.ml.regression.GBTRegressor;
 import org.apache.spark.ml.regression.RandomForestRegressor;
 import org.apache.spark.ml.tuning.CrossValidator;
 import org.apache.spark.ml.tuning.CrossValidatorModel;
@@ -18,9 +18,9 @@ import org.apache.spark.sql.SparkSession;
 
 /**
  * @author ay
- * @create 2020-06-08 8:39
+ * @create 2020-06-09 21:18
  */
-public class RandomForest {
+public class GBTR {
     public static void main(String[] args) {
         SparkSession spark = SparkSession
                 .builder()
@@ -29,7 +29,7 @@ public class RandomForest {
 //                .config("spark.executor.instances", 3)
 //                .config("spark.executor.memory", "3g")
 //                .config("spark.default.parallelism", 100)
-                .config("spark.master", "local[*]")
+                .config("spark.master","local[*]")
                 .config("spark.eventLog.enabled", "false")
                 .getOrCreate();
         Dataset<Row> df = spark
@@ -41,46 +41,28 @@ public class RandomForest {
 //                .load("/full_features_shift.csv");
                 .load("file:///E:\\mi\\jupyter\\energy_forecasting_notebooks\\final-data.csv");
 
-
         VectorAssembler vectorAssembler = new VectorAssembler()
 //                .setInputCols(new String[]{"temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour", "minute", "windgust", "t_m24", "t_m48"})
                 .setInputCols(new String[]{"temp", "dew", "humi", "windspeed", "precip", "dow", "doy", "month", "hour", "minute", "windgust", "t_m24", "t_m48"})
 //                .setInputCols(new String[]{"temp", "t_m48"})
                 .setOutputCol("features");
         Dataset<Row> output = vectorAssembler.transform(df);
-
-
-        Dataset<Row>[] splits = output.randomSplit(new double[]{0.7, 0.3});
-        Dataset<Row> trainingData = splits[0];
-        Dataset<Row> testData = splits[1];
-        //String[] columns = testData.columns();
-        testData.printSchema();
-        //testData.dtypes();
-        output.createOrReplaceTempView("actual");
-        System.out.println("outC=" + output.count());
         output.show(10);
 
-        Dataset<Row> temp = spark.sql("select * from actual where (timestamp >= '2019-07-31 00:00:00')");
-        temp.show(10);
-        System.out.println("tempC=" + temp.count());
+        Dataset<Row>[] splits = output.randomSplit(new double[] {0.7, 0.3});
+        Dataset<Row> trainingData = splits[0];
+        Dataset<Row> testData = splits[1];
 
-
-        //Dataset<Row> actual = testData.filter(testData.col("timestamp"));
-//        LightGBMRegressor lightGBMRegressor = new LightGBMRegressor()
-//                .setLabelCol("load")
-//                .setFeaturesCol("features");
-        RandomForestRegressor rf = new RandomForestRegressor()
+        GBTRegressor gbt = new GBTRegressor()
                 .setLabelCol("load")
                 .setFeaturesCol("features");
 
         Pipeline pipeline = new Pipeline()
-                .setStages(new PipelineStage[]{rf});
-
+                .setStages(new PipelineStage[]{gbt});
 
         ParamMap[] paramGridBuilder = new ParamGridBuilder()
-                .addGrid(rf.numTrees(), new int[]{10, 20})
+                .addGrid(gbt.maxDepth(), new int[]{5,10})
                 .build();
-
 
         RegressionEvaluator regressionEvaluator1 = new RegressionEvaluator()
                 .setLabelCol("load")
@@ -129,13 +111,14 @@ public class RandomForest {
         System.out.println("(mae) on test data = " + mae);
 
 
-        PipelineModel bestModel = (PipelineModel) crossValidatorModel.bestModel();
+        PipelineModel bestModel = (PipelineModel)crossValidatorModel.bestModel();
         Transformer[] stages = ((PipelineModel) crossValidatorModel.bestModel()).stages();
 
         System.out.println("bestModel.stages().length=====" + bestModel.stages()[0].extractParamMap().toString());
 
 
-        System.out.println("train-time= " + (end - start) / 1000.0 + " s");
+
+        System.out.println("train-time= " + (end-start)/1000.0 + " s");
         try {
             Thread.sleep(1000000);
         } catch (InterruptedException e) {

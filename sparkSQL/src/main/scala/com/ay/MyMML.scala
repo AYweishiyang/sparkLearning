@@ -7,7 +7,7 @@ import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.feature.{VectorAssembler, VectorIndexer}
 import org.apache.spark.ml.regression.GBTRegressor
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Dataset, SparkSession}
 import java.util.Date
 
 object MyMML {
@@ -23,6 +23,7 @@ object MyMML {
       .option("multiLine", true)
       .option("inferSchema", true)
       .load("/full_features_shift.csv")
+
     //      .load("file:///H:\\jupyter\\energy_forecasting_notebooks\\full_features_shift.csv")
 
     val assembler = new VectorAssembler()
@@ -33,7 +34,7 @@ object MyMML {
     //    val df1 = spark.sql("select * from test where timestamp > '2019-07-31 00:00:00'").show()
     //    val df1 = spark.sql("select load from test")
     //    df1.show()
-
+    df.filter($"timestamp")
     val featureIndexer = new VectorIndexer()
       .setInputCol("features")
       .setOutputCol("indexedFeatures")
