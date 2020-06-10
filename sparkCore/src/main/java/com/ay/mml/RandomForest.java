@@ -50,19 +50,15 @@ public class RandomForest {
         Dataset<Row> output = vectorAssembler.transform(df);
 
 
-        Dataset<Row>[] splits = output.randomSplit(new double[]{0.7, 0.3});
-        Dataset<Row> trainingData = splits[0];
-        Dataset<Row> testData = splits[1];
-        //String[] columns = testData.columns();
-        testData.printSchema();
-        //testData.dtypes();
-        output.createOrReplaceTempView("actual");
-        System.out.println("outC=" + output.count());
-        output.show(10);
+//        Dataset<Row>[] splits = output.randomSplit(new double[]{0.7, 0.3});
+//        Dataset<Row> trainingData = splits[0];
+//        Dataset<Row> testData = splits[1];
 
-        Dataset<Row> temp = spark.sql("select * from actual where (timestamp >= '2019-07-31 00:00:00')");
-        temp.show(10);
-        System.out.println("tempC=" + temp.count());
+        output.createOrReplaceTempView("all");
+        Dataset<Row> trainingData = spark.sql("select * from all where (timestamp < '2019-06-01 00:00:00')");
+        Dataset<Row> testData = spark.sql("select * from all where (timestamp >= '2019-06-01 00:00:00') and (timestamp < '2019-07-01 00:00:00')");
+
+        output.printSchema();
 
 
         //Dataset<Row> actual = testData.filter(testData.col("timestamp"));
@@ -78,7 +74,8 @@ public class RandomForest {
 
 
         ParamMap[] paramGridBuilder = new ParamGridBuilder()
-                .addGrid(rf.numTrees(), new int[]{10, 20})
+                .addGrid(rf.numTrees(), new int[]{60,80})
+//                .addGrid(rf.maxDepth(), new int[]{6,8,10,15})
                 .build();
 
 
@@ -105,18 +102,18 @@ public class RandomForest {
         CrossValidator crossValidator = new CrossValidator()
                 .setEstimator(pipeline)
                 .setEvaluator(regressionEvaluator1)
-                .setEvaluator(regressionEvaluator2)
-                .setEvaluator(regressionEvaluator3)
-                .setEvaluator(regressionEvaluator4)
+//                .setEvaluator(regressionEvaluator2)
+//                .setEvaluator(regressionEvaluator3)
+//                .setEvaluator(regressionEvaluator4)
                 .setEstimatorParamMaps(paramGridBuilder)
                 .setNumFolds(3) // Use 3+ in practice
-                .setParallelism(10);// Evaluate up to 2 parameter settings in parallel
+                .setParallelism(12);// Evaluate up to 2 parameter settings in parallel
         long start = System.currentTimeMillis();
         CrossValidatorModel crossValidatorModel = crossValidator.fit(trainingData);
         long end = System.currentTimeMillis();
         Dataset<Row> prediction = crossValidatorModel.transform(testData);
 
-        prediction.select("prediction", "load", "features").show(5);
+        prediction.select( "prediction", "load", "features").show(1000);
 
 
         double rmse = regressionEvaluator1.evaluate(prediction);
@@ -132,15 +129,17 @@ public class RandomForest {
         PipelineModel bestModel = (PipelineModel) crossValidatorModel.bestModel();
         Transformer[] stages = ((PipelineModel) crossValidatorModel.bestModel()).stages();
 
+        System.out.println("crossValidatorModel.params().toString()==" + crossValidatorModel.params().toString());
+
         System.out.println("bestModel.stages().length=====" + bestModel.stages()[0].extractParamMap().toString());
 
 
         System.out.println("train-time= " + (end - start) / 1000.0 + " s");
-        try {
-            Thread.sleep(1000000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(1000000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         spark.stop();
 
     }
